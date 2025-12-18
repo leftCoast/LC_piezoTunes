@@ -52,7 +52,7 @@ bool varLenToValue(uint32_t* result,File MIDIFile) {
       	fileError(__func__);							// Show error..
 			return false;									// Bail out.
 		}														//
-      if (MIDIFile.read(&readByte, 1)==1) {		// If we can grab a byte..
+      if (MIDIFile.read((uint8_t*)&readByte, 1)==1) {		// If we can grab a byte..
 			if (bitRead(readByte, 7)) {        		// If high bit was set! Oh ohh..
 				readByte = readByte & 0b01111111;	// Clip off high bit.
 				*result = *result | readByte;			// Set the lower 7 bits..
@@ -74,7 +74,7 @@ bool varLenToValue(uint32_t* result,File MIDIFile) {
 bool readMIDIHeader(MIDIHeader* theHeader, File MIDIFile) {
 
 	if (MIDIFile.available()) {											// If we have any bytes left..
-		if (MIDIFile.read(&theHeader->chunkID, 4)==4) {				// If we can grab the bytes..
+		if (MIDIFile.read((uint8_t*)&theHeader->chunkID, 4)==4) {				// If we can grab the bytes..
 			if (read32(&theHeader->chunkSize,MIDIFile)) {			// Chunk size.
 				if (read16(&theHeader->formatType,MIDIFile)) {		// Format type.
 					if (read16(&theHeader->numTracks,MIDIFile)) {	// Num tracks.
@@ -95,7 +95,7 @@ bool readMIDIHeader(MIDIHeader* theHeader, File MIDIFile) {
 bool readTrackHeader(trackHeader* theHeader, File MIDIFile) {
 
    if (MIDIFile.available()) {									// If we have any bytes left..
-		if (MIDIFile.read(&theHeader->chunkID, 4)==4) {		// If we can grab the bytes..
+		if (MIDIFile.read((uint8_t*)&theHeader->chunkID, 4)==4) {		// If we can grab the bytes..
 			if (read32(&theHeader->chunkSize,MIDIFile)) {	// Can we grab chunk size?
 				return true;											// If we made it here, we're a success!
 			}																//
@@ -113,15 +113,15 @@ bool readEventHeader(eventHeader* header, File MIDIFile) {
    
 	if (MIDIFile.available()) {										// If we have any bytes left..
 		if (varLenToValue(&header->deltaTime,MIDIFile)) {		// Get the packed delta time.
-			if (MIDIFile.read(&twoNibbles, 1)==1) {				// Grab a byte for event & channel.
+			if (MIDIFile.read((uint8_t*)&twoNibbles, 1)==1) {				// Grab a byte for event & channel.
 				header->eventType = twoNibbles;						// Start unpacking the nibbles.
 				header->eventType = header->eventType >> 4;		// I guess we want the high nibble.
 				header->eventType = header->eventType & 0x0F;	// Clear the high nibble.
 				header->channel = 0;										// Clear channel.
 				header->channel = twoNibbles & 0x0F;				// Stamp the lower nibble here.
-				if (MIDIFile.read(&twoNibbles, 1)==1) {			// Grab another byte.
+				if (MIDIFile.read((uint8_t*)&twoNibbles, 1)==1) {			// Grab another byte.
 					header->param1 = twoNibbles;						// Stuff it into param1.
-					if (MIDIFile.read(&twoNibbles, 1)==1) {		// Grab our last byte..
+					if (MIDIFile.read((uint8_t*)&twoNibbles, 1)==1) {		// Grab our last byte..
 						header->param2 = twoNibbles;					// Stuff it into param2.
 						return true;										// If we got here, it's a success!
 					}															//
@@ -172,7 +172,7 @@ bool readAndShowMetaData(metaEvent* theEvent, File MIDIFile) {
    char  metaByte;
    
    for(uint32_t i=0;i<theEvent->numBytes;i++) {
-      if (MIDIFile.read(&metaByte, 1)!=1) return false;
+      if (MIDIFile.read((uint8_t*)&metaByte, 1)!=1) return false;
       Serial.print(metaByte);
    }
    Serial.println();
@@ -270,15 +270,15 @@ void decodeFile(const char* filePath) {
                case 0x2F : done = true; break;
                case 0x51 :
                   microsPerBeat = 0;
-                  MIDIFile.read(&aByte, 1);
+                  MIDIFile.read((uint8_t*)&aByte, 1);
                   microsPerBeat = aByte;
                   microsPerBeat = microsPerBeat << 16;
-                  MIDIFile.read(&aByte, 1);
+                  MIDIFile.read((uint8_t*)&aByte, 1);
                   temp = 0;
                   temp = aByte;
                   temp = temp << 8;
                   microsPerBeat = microsPerBeat | temp;
-                  MIDIFile.read(&aByte, 1);
+                  MIDIFile.read((uint8_t*)&aByte, 1);
                   temp = 0;
                   temp = aByte;
                   microsPerBeat = microsPerBeat | aByte;
